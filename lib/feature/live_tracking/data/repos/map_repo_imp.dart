@@ -4,8 +4,10 @@ import 'package:live_tracking/feature/live_tracking/domain/repos/map_repo.dart';
 import 'package:uuid/uuid.dart';
 
 class MapRepoImp extends MapRepo {
-  final ApiServices apiServices = ApiServices();
+  final ApiServices apiServices ;
   final String apiKey = dotenv.env['API_KEY'] ?? '';
+
+  MapRepoImp(this.apiServices);
 
   @override
   Future<List<Map<String, dynamic>>> getPredictions(String place) async{
@@ -47,7 +49,7 @@ class MapRepoImp extends MapRepo {
           "origin" : origin
         },
     );
-    return res['routes'];
+    return res['routes'][0];
   }
 
 
