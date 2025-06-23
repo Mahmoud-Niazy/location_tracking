@@ -4,10 +4,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 
-class LocationManager {
-  static final LocationManager singleton = LocationManager._internal();
-  LocationManager._internal();
-  static LocationManager get shared => singleton;
+class LocationServices {
+  static final LocationServices singleton = LocationServices._internal();
+  LocationServices._internal();
+  static LocationServices get shared => singleton;
 
   Future<bool> handlePermissions()async{
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -38,7 +38,7 @@ class LocationManager {
 
    getLocationUpdates() async {
     const LocationSettings locationSettings = LocationSettings(
-        accuracy: LocationAccuracy.bestForNavigation, distanceFilter: 0);
+        accuracy: LocationAccuracy.bestForNavigation, distanceFilter: 1);
 
     Geolocator.getPositionStream(locationSettings: locationSettings)
         .listen((Position position) {

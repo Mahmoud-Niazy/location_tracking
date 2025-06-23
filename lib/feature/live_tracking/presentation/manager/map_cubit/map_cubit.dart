@@ -1,7 +1,7 @@
 import 'package:fbroadcast/fbroadcast.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:live_tracking/core/managers/locations_manager.dart';
+import 'package:live_tracking/core/location_services/locations_services.dart';
 import 'package:live_tracking/feature/live_tracking/presentation/manager/map_cubit/map_states.dart';
 import 'package:flutter/material.dart';
 
@@ -15,16 +15,16 @@ class MapCubit extends Cubit<MapStates> {
 
   getCurrentLocation() async {
     emit(MapLoading());
-    currentPosition = await LocationManager.shared.getCurrentLocation();
+    currentPosition = await LocationServices.shared.getCurrentLocation();
     if(currentPosition == null){
       emit(PermissionDenied());
       return;
     }
     addMarker(id: '2', position: endPosition);
     await loadMarkerIcon();
-    LocationManager.shared.getLocationUpdates();
+    LocationServices.shared.getLocationUpdates();
      FBroadcast.instance().register("update_location", (value, callback) {
-       carDegree = LocationManager.calculateDegrees(
+       carDegree = LocationServices.calculateDegrees(
            LatLng(currentPosition!.latitude , currentPosition!.longitude),
            LatLng(value.latitude, value.longitude));
       currentPosition = LatLng(value.latitude, value.longitude);
