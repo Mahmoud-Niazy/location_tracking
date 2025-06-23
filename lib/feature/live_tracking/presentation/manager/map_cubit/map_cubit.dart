@@ -32,6 +32,7 @@ class MapCubit extends Cubit<MapStates> {
         position: currentPosition!,
         id: '1',
         icon: carIcon,
+         rotation: carDegree,
       );
        emit(UpdateCurrentLocation());
      });

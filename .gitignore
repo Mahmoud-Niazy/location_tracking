@@ -46,3 +46,5 @@ app.*.map.json
 /android/gradle.properties
 /android/local.properties
 
+#Importatnt keys
+.env
