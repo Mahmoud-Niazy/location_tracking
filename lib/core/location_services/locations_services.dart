@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:fbroadcast/fbroadcast.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -88,5 +89,29 @@ class LocationServices {
     }
 
     yield end;
+  }
+
+  static Future<String> getLocationName(LatLng location) async {
+    try {
+      List<Placemark> placeMarks = await placemarkFromCoordinates(location.latitude, location.longitude);
+      if (placeMarks.isNotEmpty) {
+        final place = placeMarks.first;
+        return "${place.name}, ${place.locality}, ${place.country}";
+      }
+      else {
+        return "مكان غير معروف";
+      }
+    } catch (e) {
+      return "";
+    }
+  }
+
+  static Future<double> getDistanceInMeters(LatLng start, LatLng end) async {
+    return Geolocator.distanceBetween(
+      start.latitude,
+      start.longitude,
+      end.latitude,
+      end.longitude,
+    );
   }
 }

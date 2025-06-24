@@ -41,12 +41,15 @@ class MapView extends StatelessWidget {
                     zoom: 20,
                   ),
                 ),
-                CustomSearchBar(
-                  controller: cubit.placeSearchController,
-                  title: 'Search',
-                  onQueryChanged: (search)async{
-                    await cubit.getPredictions();
-                  },
+                Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: CustomSearchBar(
+                    controller: cubit.placeSearchController,
+                    title: 'ابحث هنا',
+                    onQueryChanged: (search)async{
+                      await cubit.getPredictions();
+                    },
+                  ),
                 ),
               ],
             );

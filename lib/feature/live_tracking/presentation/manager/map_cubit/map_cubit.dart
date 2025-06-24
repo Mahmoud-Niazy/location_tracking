@@ -10,6 +10,8 @@ import 'package:live_tracking/feature/live_tracking/presentation/manager/map_cub
 import 'package:flutter/material.dart';
 import 'package:material_floating_search_bar_2/material_floating_search_bar_2.dart';
 
+import '../../../data/models/direction_model.dart';
+
 class MapCubit extends Cubit<MapStates> {
   final GetPredictionsUseCase getPredictionsUseCase;
   final GetPlaceDetailsUseCase getPlaceDetailsUseCase;
@@ -82,12 +84,57 @@ class MapCubit extends Cubit<MapStates> {
   /// Google APIS
 
   List<PredictionModel> predictions = [];
-  FloatingSearchBarController placeSearchController = FloatingSearchBarController();
+  FloatingSearchBarController placeSearchController =
+      FloatingSearchBarController();
+
   Future<void> getPredictions() async {
     emit(GetPredictionsLoadingState());
-    try{
-      predictions = await getPredictionsUseCase.execute(placeSearchController.query);
+    try {
+      predictions = await getPredictionsUseCase.execute(
+        placeSearchController.query,
+      );
       emit(GetPredictionsSuccessState());
+    } catch (error) {
+      emit(MapErrorState());
+    }
+  }
+
+  LatLng? searchedPlaceLocation;
+
+  Future<void> getPlaceDetails(String placeId) async {
+    emit(GetPlaceDetailsLoadingState());
+    try {
+      searchedPlaceLocation = await getPlaceDetailsUseCase.execute(placeId);
+      emit(GetPlaceDetailsSuccessState());
+    } catch (error) {
+      emit(MapErrorState());
+    }
+  }
+
+  DirectionModel? direction;
+
+  Future<void> getDirections() async {
+    emit(GetDirectionsLoadingState());
+    try{
+      direction = await getDirectionsUseCase.execute(
+        origin: "${currentPosition!.latitude},${currentPosition!.longitude}",
+        destination: "${searchedPlaceLocation!.latitude},${searchedPlaceLocation!.longitude}",
+      );
+      emit(GetDirectionsSuccessState());
+    }
+    catch(error){
+      emit(MapErrorState());
+    }
+  }
+
+  String? from ;
+  String? to;
+  Future<void> getJourneyDetails()async{
+    emit(GetJourneyDetailsLoadingState());
+    try{
+      from = await LocationServices.getLocationName(currentPosition!);
+      to = await LocationServices.getLocationName(searchedPlaceLocation!);
+      emit(GetJourneyDetailsSuccessState());
     }
     catch(error){
       emit(MapErrorState());

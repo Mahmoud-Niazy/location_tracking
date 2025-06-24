@@ -1,16 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:live_tracking/core/service_locator/srevice_locator.dart';
+import 'package:live_tracking/core/utils/app_styles.dart';
 import 'package:live_tracking/feature/live_tracking/presentation/manager/map_cubit/map_cubit.dart';
 import 'package:live_tracking/feature/live_tracking/presentation/manager/map_cubit/map_states.dart';
 import 'package:material_floating_search_bar_2/material_floating_search_bar_2.dart';
+
+import '../../../../../core/widgets/circular_progress_indicator.dart';
+import 'bottom_sheet_content.dart';
 
 class CustomSearchBar extends StatelessWidget {
   final String title;
   final void Function(String)? onQueryChanged;
   final FloatingSearchBarController controller;
 
-  const CustomSearchBar(
-      {super.key, required this.title, required this.onQueryChanged,required this.controller});
+  const CustomSearchBar({
+    super.key,
+    required this.title,
+    required this.onQueryChanged,
+    required this.controller,
+  });
+
+  Future<void> onPressOnPrediction({
+    required MapCubit cubit,
+    required String placeId,
+    required BuildContext context,
+  }) async {
+    await cubit.getPlaceDetails(placeId);
+    controller.close();
+    if (context.mounted) {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return BlocProvider.value(
+            value: serviceLocator<MapCubit>(),
+            child: BottomSheetContent(),
+          );
+        },
+      );
+      await cubit.getJourneyDetails();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +58,6 @@ class CustomSearchBar extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       debounceDelay: const Duration(milliseconds: 500),
       onQueryChanged: onQueryChanged,
-      // Specify a custom transition to be used for
-      // animating between opened and closed stated.
       transition: CircularFloatingSearchBarTransition(),
       actions: [
         FloatingSearchBarAction(
@@ -50,34 +78,58 @@ class CustomSearchBar extends StatelessWidget {
             child: BlocBuilder<MapCubit, MapStates>(
               builder: (context, state) {
                 var cubit = context.read<MapCubit>();
+                if (state is GetPredictionsLoadingState) {
+                  return CustomCircularProgressIndicator();
+                }
                 return SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: cubit.predictions.asMap().entries.map((p){
+                    children: cubit.predictions.asMap().entries.map((p) {
                       return Padding(
                         padding: const EdgeInsets.all(5),
                         child: Column(
                           children: [
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              padding: EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: Text(
-                                p.value.description
+                            InkWell(
+                              onTap: () async {
+                                await onPressOnPrediction(
+                                  cubit: cubit,
+                                  placeId: p.value.placeId,
+                                  context: context,
+                                );
+                              },
+                              child: Container(
+                                alignment: Alignment.centerLeft,
+                                padding: EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.location_on_outlined,
+                                      color: Colors.blue,
+                                    ),
+                                    SizedBox(width: 5),
+                                    Expanded(
+                                      child: Text(
+                                        p.value.description,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppStyles.style16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            if(p.key < cubit.predictions.length - 1)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 30
+                            if (p.key < cubit.predictions.length - 1)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 30,
+                                ),
+                                child: Divider(color: Colors.black12),
                               ),
-                              child: Divider(
-                                color: Colors.black12,
-                              ),
-                            ),
                           ],
                         ),
                       );
