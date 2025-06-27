@@ -39,7 +39,7 @@ class LocationServices {
 
    getLocationUpdates() async {
     const LocationSettings locationSettings = LocationSettings(
-        accuracy: LocationAccuracy.bestForNavigation, distanceFilter: 1);
+        accuracy: LocationAccuracy.bestForNavigation, distanceFilter: 3);
 
     Geolocator.getPositionStream(locationSettings: locationSettings)
         .listen((Position position) {

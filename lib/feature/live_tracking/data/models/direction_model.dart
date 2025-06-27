@@ -13,7 +13,7 @@ class DirectionModel {
     return DirectionModel(
         distance: json['legs'][0]['distance']['text'],
         duration: json['legs'][0]['duration']['text'],
-        polylinePoints: json['overview_polyline'],
+        polylinePoints: json['overview_polyline']['points'],
     );
   }
 }

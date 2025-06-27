@@ -23,7 +23,7 @@ class MapView extends StatelessWidget {
             if (state is PermissionDenied) {
               return Center(
                 child: Text(
-                  'Permissions Denied',
+                  'لا يوجد اذن للوصول للموقع',
                   style: TextStyle(
                     fontSize: 30,
                     color: Colors.blue,
@@ -36,10 +36,14 @@ class MapView extends StatelessWidget {
               children: [
                 GoogleMap(
                   markers: cubit.markers,
+                  onMapCreated: (GoogleMapController controller) {
+                    cubit.mapController  = controller;
+                  },
                   initialCameraPosition: CameraPosition(
                     target: cubit.currentPosition!,
-                    zoom: 20,
+                    zoom: 17,
                   ),
+                  polylines: cubit.polylines,
                 ),
                 Padding(
                   padding: const EdgeInsets.all(15),

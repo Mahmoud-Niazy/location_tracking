@@ -27,11 +27,13 @@ class MapRepoImp extends MapRepo {
 
   @override
   Future<Map<String, dynamic>> getPlaceDetails(String placeId) async{
+    String sessionToken = Uuid().v4();
     var res = await apiServices.getData(
         path: 'place/details/json',
         query: {
           "place_id" : placeId,
           "key" : apiKey,
+          "sessiontoken" : sessionToken,
         },
     );
     return res['result'];
@@ -42,11 +44,14 @@ class MapRepoImp extends MapRepo {
     required String origin,
     required String destination,
   }) async{
+    String sessionToken = Uuid().v4();
     var res = await apiServices.getData(
         path: 'directions/json',
         query: {
           "destination" : destination,
-          "origin" : origin
+          "origin" : origin,
+          "key" : apiKey,
+          "sessiontoken" : sessionToken,
         },
     );
     return res['routes'][0];

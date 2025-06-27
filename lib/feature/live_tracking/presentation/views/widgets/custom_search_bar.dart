@@ -34,7 +34,7 @@ class CustomSearchBar extends StatelessWidget {
         builder: (context) {
           return BlocProvider.value(
             value: serviceLocator<MapCubit>(),
-            child: BottomSheetContent(),
+            child: BottomSheetContent(placeId: placeId),
           );
         },
       );

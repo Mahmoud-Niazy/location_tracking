@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:fbroadcast/fbroadcast.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:live_tracking/core/location_services/locations_services.dart';
+import 'package:live_tracking/core/utils/app_constance.dart';
 import 'package:live_tracking/feature/live_tracking/data/models/prediction_model.dart';
 import 'package:live_tracking/feature/live_tracking/domain/use_cases/get_directions_use_case.dart';
 import 'package:live_tracking/feature/live_tracking/domain/use_cases/get_place_details_use_case.dart';
@@ -24,6 +27,35 @@ class MapCubit extends Cubit<MapStates> {
   ) : super(MapInitialState());
 
   // LatLng endPosition = LatLng(30.956429345130598, 31.25279869884253);
+  late GoogleMapController mapController;
+
+  Future<void> zoomToFitPolyline(
+    List<LatLng> polylinePoints, {
+    double padding = 100.0,
+  }) async {
+    if (polylinePoints.isEmpty) return;
+
+    double minLat = polylinePoints.first.latitude;
+    double maxLat = polylinePoints.first.latitude;
+    double minLng = polylinePoints.first.longitude;
+    double maxLng = polylinePoints.first.longitude;
+
+    for (LatLng point in polylinePoints) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+
+    CameraUpdate cameraUpdate = CameraUpdate.newLatLngBounds(bounds, padding);
+
+    await mapController.animateCamera(cameraUpdate);
+  }
 
   LatLng? currentPosition;
   double carDegree = 0.0;
@@ -56,7 +88,7 @@ class MapCubit extends Cubit<MapStates> {
 
   Set<Marker> markers = {};
 
-  addMarker({
+  void addMarker({
     required String id,
     required LatLng position,
     AssetMapBitmap? icon,
@@ -112,31 +144,57 @@ class MapCubit extends Cubit<MapStates> {
   }
 
   DirectionModel? direction;
+  Set<Polyline> polylines = {};
 
   Future<void> getDirections() async {
     emit(GetDirectionsLoadingState());
-    try{
+    try {
       direction = await getDirectionsUseCase.execute(
         origin: "${currentPosition!.latitude},${currentPosition!.longitude}",
-        destination: "${searchedPlaceLocation!.latitude},${searchedPlaceLocation!.longitude}",
+        destination:
+            "${searchedPlaceLocation!.latitude},${searchedPlaceLocation!.longitude}",
       );
+      if (direction != null) {
+        polylines = getPolyline(direction!.polylinePoints);
+      }
+      addMarker(id: '2', position: searchedPlaceLocation!);
       emit(GetDirectionsSuccessState());
-    }
-    catch(error){
+    } catch (error) {
       emit(MapErrorState());
     }
   }
 
-  String? from ;
+  Set<Polyline> getPolyline(String points) {
+    Set<Polyline> polylines = {};
+    PolylinePoints polylinePoints = PolylinePoints();
+    List<PointLatLng> result = polylinePoints.decodePolyline(points);
+    List<LatLng> pointsAsLatLng = [];
+    for (var p in result) {
+      pointsAsLatLng.add(LatLng(p.latitude, p.longitude));
+    }
+    polylines.add(
+      Polyline(
+        polylineId: PolylineId('1'),
+        points: pointsAsLatLng,
+        width: 5,
+        color: AppConstance.primaryColor,
+      ),
+    );
+    zoomToFitPolyline(pointsAsLatLng);
+    return polylines;
+  }
+
+  String? from;
+
   String? to;
-  Future<void> getJourneyDetails()async{
+
+  Future<void> getJourneyDetails() async {
     emit(GetJourneyDetailsLoadingState());
-    try{
+    try {
       from = await LocationServices.getLocationName(currentPosition!);
       to = await LocationServices.getLocationName(searchedPlaceLocation!);
       emit(GetJourneyDetailsSuccessState());
-    }
-    catch(error){
+    } catch (error) {
       emit(MapErrorState());
     }
   }

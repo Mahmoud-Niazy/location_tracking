@@ -8,7 +8,20 @@ import 'package:live_tracking/feature/live_tracking/presentation/manager/map_cub
 import 'package:live_tracking/feature/live_tracking/presentation/views/widgets/points_list.dart';
 
 class BottomSheetContent extends StatelessWidget {
-  const BottomSheetContent({super.key});
+  final String placeId;
+
+  const BottomSheetContent({super.key, required this.placeId});
+
+  Future<void> confirmJourney({
+    required MapCubit cubit,
+    required BuildContext context,
+  }) async {
+    await cubit.getPlaceDetails(placeId);
+    await cubit.getDirections();
+    if(context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,15 +48,19 @@ class BottomSheetContent extends StatelessWidget {
             children: [
               Text(cubit.from ?? '', style: AppStyles.style15),
               SizedBox(height: 10),
-              SizedBox(
-                width: 10,
-                height: 100,
-                child: PointsList(),
-              ),
+              SizedBox(width: 10, height: 100, child: PointsList()),
               SizedBox(height: 10),
               Text(cubit.to ?? '', style: AppStyles.style15),
               SizedBox(height: 30),
-              CustomButton(title: "تأكيد الرحلة", onPressed: () {}),
+              CustomButton(
+                title: "تأكيد الرحلة",
+                onPressed: () async {
+                  await confirmJourney(
+                    context: context,
+                    cubit: cubit,
+                  );
+                },
+              ),
             ],
           ),
         );
